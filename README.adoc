@@ -1,12 +1,12 @@
-= devops-stack-module-template
+= devops-stack-module-rclone
 // Document attributes to replace along the document
 // Here you can define variables for something that keeps repeating along the text
 :CHART-NAME-chart-version: 1.2.3
 :original-repo-url: https://github.com/path/to/some/repository
 
-A https://devops-stack.io[DevOps Stack] module to deploy *_something_*.
+A https://devops-stack.io[DevOps Stack] module to deploy rclone.
 
-The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions. 
+The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions.
 
 [cols="1,1,1",options="autowidth,header"]
 |===
@@ -185,7 +185,7 @@ The following outputs are exported:
 Description: ID to pass other modules in order to refer to this module as a dependency.
 // END_TF_DOCS
 
-=== Reference in table format 
+=== Reference in table format
 
 .Show tables
 [%collapsible]
