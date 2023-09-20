@@ -102,7 +102,7 @@ spec:
                   key: oauth_cookie_secret
           ports:
             - containerPort: 4180
-              name: web
+              name: proxy
               protocol: TCP
       {{- end }}
       {{- with .Values.nodeSelector }}

@@ -12,8 +12,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: 4180
-      targetPort: web
+      targetPort: proxy
       protocol: TCP
-      name: web
+      name: rclone-proxy
   selector:
     {{- include "rclone.selectorLabels" . | nindent 4 }}
