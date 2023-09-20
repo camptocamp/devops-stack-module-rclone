@@ -35,6 +35,11 @@ data "utils_deep_merge_yaml" "values" {
   input = [for i in concat(local.helm_values, var.helm_values) : yamlencode(i)]
 }
 
+resource "random_string" "oauth2_cookie_secret" {
+  length = 16
+  special = false
+}
+
 resource "argocd_application" "this" {
   metadata {
     name      = "rclone"
