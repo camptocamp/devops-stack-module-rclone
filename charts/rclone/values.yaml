@@ -1,3 +1,112 @@
 # Default values for rclone.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: rclone/rclone
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# imagePullSecrets: []
+# nameOverride: ""
+# fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  # name:
+  # namespace:
+
+podAnnotations: {}
+podLabels: {}
+
+# podSecurityContext: {}
+#   # fsGroup: 2000
+
+# securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# service:
+#   type: ClusterIP
+#   port: 5572
+
+ingress:
+  enabled: false
+#   className: ""
+  annotations: {}
+#   hosts:
+#     - host: rclone.apps.green.is-internal.camptocamp.com
+#       paths:
+#         - path: /
+#           pathType: ImplementationSpecific
+#   tls:
+#    - secretName: rclone-tls
+#      hosts:
+#        - rclone.apps.green.is-internal.camptocamp.com
+
+# metrics:
+#   enabled: true
+
+#   serviceMonitor:
+#     autodetect: true
+#     enabled: true
+#     annotations: {}
+#     additionalLabels: {}
+#     # ServiceMonitor namespace. Default to Velero namespace.
+#     # namespace:
+#     # ServiceMonitor connection scheme. Defaults to HTTP.
+#     # scheme: ""
+#     # ServiceMonitor connection tlsConfig. Defaults to {}.
+#     # tlsConfig: {}
+#   prometheusRule:
+#     enabled: false
+#     # Additional labels to add to deployed PrometheusRule
+#     additionalLabels: {}
+#     # PrometheusRule namespace. Defaults to Velero namespace.
+#     # namespace: ""
+#     # Rules to be deployed
+#     spec: []
+
+# oidc:
+#   oauth2_proxy_image: "quay.io/oauth2-proxy/oauth2-proxy:v7.4.0"
+#   issuer_url: var.oidc
+
+# resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# grafana_dashboard:
+#   enabled: true
