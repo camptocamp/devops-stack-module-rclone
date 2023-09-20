@@ -10,8 +10,10 @@ module "rclone" {
   app_autosync     = var.app_autosync
   dependency_ids   = var.dependency_ids
 
-  oidc               = var.oidc
-  rclone_config_file = var.rclone_config_file
+  oidc                            = var.oidc
+  rclone_config_file              = var.rclone_config_file
+  rclone_enable_webui             = var.rclone_enable_webui
+  rclone_enable_grafana_dashboard = var.enable_grafana_dashboard
 
   helm_values = concat(local.helm_values, var.helm_values)
 }
