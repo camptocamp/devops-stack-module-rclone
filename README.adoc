@@ -1,12 +1,10 @@
 = devops-stack-module-rclone
 // Document attributes to replace along the document
 // Here you can define variables for something that keeps repeating along the text
-:CHART-NAME-chart-version: 1.2.3
+:CHART-NAME-chart-version: 1.0.0
 :original-repo-url: https://github.com/path/to/some/repository
 
 A https://devops-stack.io[DevOps Stack] module to deploy rclone.
-
-The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions.
 
 [cols="1,1,1",options="autowidth,header"]
 |===
@@ -22,7 +20,7 @@ _You can start by giving a simple example and then show some others with increas
 
 [source,terraform]
 ----
-module "template" {
+module "rclone" {
   source = "git::https://github.com/camptocamp/devops-stack-module-template.git?ref=<RELEASE>"
 
   cluster_name            = local.cluster_name
