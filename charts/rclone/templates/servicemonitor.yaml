@@ -27,7 +27,7 @@ spec:
       app.kubernetes.io/name: {{ include "rclone.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   endpoints:
-  - port: http
+  - targetPort: http
     interval: {{ .Values.metrics.scrapeInterval }}
     scrapeTimeout: {{ .Values.metrics.scrapeTimeout }}
     {{- if .Values.metrics.serviceMonitor.scheme }}
