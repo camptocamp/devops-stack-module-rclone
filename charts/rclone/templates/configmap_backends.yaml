@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rclone-backend
+  namespace: rclone
+data:
+  rclone.conf: {{- .Values.rclone_config_file | toYaml | indent 1 }}

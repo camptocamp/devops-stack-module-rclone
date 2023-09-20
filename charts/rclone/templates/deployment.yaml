@@ -56,6 +56,10 @@ spec:
             - --rc-web-gui-no-open-browser
             - --rc-no-auth
             - -vv
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /config/rclone
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -68,3 +72,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+      - name: rclone-config
+        configMap:
+          name: rclone-backend
