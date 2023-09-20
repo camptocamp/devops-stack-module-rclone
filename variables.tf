@@ -65,3 +65,9 @@ variable "dependency_ids" {
 #######################
 ## Module variables
 #######################
+
+variable "enable_grafana_dashboard" {
+    description = "Configuration of all Rclone backends"
+    type = bool
+    default = false
+  }

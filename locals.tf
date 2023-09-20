@@ -46,4 +46,23 @@ locals {
     }
   }]
 
+    metrics = {
+      enabled = true
+      serviceMonitor = {
+        autodetect       = true
+        enabled          = true
+        annotations      = {}
+        additionalLabels = {}
+        prometheusRule = {
+          enable           = false
+          additionalLabels = {}
+          spec             = []
+        }
+      }
+    }
+
+    grafana_dashboard = {
+      enabled = true
+    }
+
 }
