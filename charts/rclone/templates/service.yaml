@@ -12,8 +12,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: 4180
-      targetPort: http
+      targetPort: web
       protocol: TCP
-      name: http
+      name: web
   selector:
     {{- include "rclone.selectorLabels" . | nindent 4 }}

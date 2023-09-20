@@ -3,12 +3,6 @@ locals {
   domain_full = format("rclone.apps.%s.%s", var.cluster_name, var.base_domain)
 
   helm_values = [{
-    replicaCount = 1
-    image = {
-      repository = "rclone/rclone"
-      pullPolicy = "IfNotPresent"
-      tag        = ""
-    }
 
     service = {
       type = "ClusterIP"
