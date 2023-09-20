@@ -52,8 +52,10 @@ spec:
             - rcd
             - --rc-addr=:{{ .Values.service.port }}
             - --rc-enable-metrics
+            {{- if .Values.ingress.enabled }}
             - --rc-web-gui
             - --rc-web-gui-no-open-browser
+            {{- end }}
             - --rc-no-auth
             - -vv
           volumeMounts:

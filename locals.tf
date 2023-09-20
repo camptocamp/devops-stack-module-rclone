@@ -12,7 +12,7 @@ locals {
     rclone_config_file = var.rclone_config_file
 
     ingress = {
-      enabled   = true
+      enabled   = var.rclone_enable_webui
       classname = ""
       annotations = {
         "cert-manager.io/cluster-issuer"                   = "ca-issuer" # TODO: Change to letsencrypt-staging

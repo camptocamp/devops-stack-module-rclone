@@ -66,6 +66,7 @@ variable "dependency_ids" {
 ## Module variables
 #######################
 
+
 variable "oidc" {
   description = "OIDC settings to configure OAuth2-Proxy which will be used to protect Rclone's dashboard."
   type = object({
@@ -80,13 +81,19 @@ variable "oidc" {
   default = null
 }
 
+variable "rclone_enable_webui" {
+  description = "Set to true to enable the WebUI of Rclone"
+  type        = bool
+  default     = true
+}
+
 variable "rclone_config_file" {
-    description = "Configuration of all Rclone backends"
-    type = string
-  }
+  description = "Configuration of all Rclone backends"
+  type        = string
+}
 
 variable "enable_grafana_dashboard" {
-    description = "Configuration of all Rclone backends"
-    type = bool
-    default = false
-  }
+  description = "Configuration of all Rclone backends"
+  type        = bool
+  default     = false
+}
