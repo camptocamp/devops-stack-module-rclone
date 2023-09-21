@@ -93,7 +93,7 @@ variable "rclone_config_file" {
 }
 
 variable "enable_grafana_dashboard" {
-  description = "Configuration of all Rclone backends"
+  description = "Whether to add a monitoring dashboard to Grafana"
   type        = bool
   default     = false
 }
