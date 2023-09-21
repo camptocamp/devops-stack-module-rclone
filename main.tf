@@ -40,6 +40,28 @@ resource "random_string" "oauth2_cookie_secret" {
   special = false
 }
 
+resource "kubernetes_namespace" "rclone_namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_secret" "rclone_config_secret" {
+
+  metadata {
+    name      = "rclone-config-file"
+    namespace = var.namespace
+  }
+
+  data = {
+    "rclone.conf" = var.rclone_config_file
+  }
+
+  depends_on = [
+    resource.kubernetes_namespace.rclone_namespace
+  ]
+}
+
 resource "argocd_application" "this" {
   metadata {
     name      = "rclone"
@@ -90,7 +112,8 @@ resource "argocd_application" "this" {
       }
 
       sync_options = [
-        "CreateNamespace=true"
+        # Set to false because namespace is created by resource.kubernetes_namespace.rclone_namespace
+        "CreateNamespace=false"
       ]
     }
   }
