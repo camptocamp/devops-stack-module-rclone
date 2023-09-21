@@ -1,22 +1,24 @@
 = devops-stack-module-rclone
 // Document attributes to replace along the document
-// Here you can define variables for something that keeps repeating along the text
-:CHART-NAME-chart-version: 1.0.0
-:original-repo-url: https://github.com/path/to/some/repository
+:chart-version: 1.0.0
 
-A https://devops-stack.io[DevOps Stack] module to deploy rclone.
+A https://devops-stack.io[DevOps Stack] module to deploy https://rclone.org/[Rclone].
 
 [cols="1,1,1",options="autowidth,header"]
 |===
 |Current Chart Version |Original Repository |Default Values
-|*{CHART-NAME-chart-version}* |{original-repo-url}/subpath/to/the/chart[Chart] |{original-repo-url}//subpath/to/the/values.yaml[`values.yaml`] (_here you can also use artifacthub.io_)
+|*{chart-version}* |https://github.com/camptocamp/devops-stack-module-rclone/blob/v{chart-version}/charts/rclone/[Chart] |https://github.com/camptocamp/devops-stack-module-rclone/blob/v{chart-version}/charts/rclone/values.yaml[`values.yaml`]
 |===
+
+*Since this module is meant to be instantiated using its variants, the usage documentation is available in each variant* ( xref:./aks/README.adoc[AKS] ).
+
+NOTE: Since we haven't found a proper Helm chart to deploy Rclone, we created one ourselves and packaged it inside this repository. 
+
+// TODO From here
 
 == Usage
 
-_Here you will show examples of how to call this module on your code. Note that the `depends_on` needs to be adapted to your use case._
-
-_You can start by giving a simple example and then show some others with increasing complexity and/or for specific use cases._
+This module can be declared by adding the following block on your Terraform configuration:
 
 [source,terraform]
 ----
@@ -26,10 +28,13 @@ module "rclone" {
   cluster_name            = local.cluster_name
   argocd_namespace        = local.argocd_namespace
 
-  # TODO Consider replacing this depends_on by our dependency_ids
-  depends_on = [
-    module.argocd_bootstrap,
-  ]
+  dependency_ids = {
+    argocd                = module.argocd_bootstrap.id
+    traefik               = module.traefik.id
+    cert-manager          = module.cert-manager.id
+    oidc                  = module.oidc.id
+    kube-prometheus-stack = module.kube-prometheus-stack.id
+  }
 }
 ----
 
