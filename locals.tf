@@ -23,24 +23,24 @@ locals {
         "kubernetes.io/ingress.allow-http"                 = "false"
       }
       hosts = [
-      {
-        host = local.domain,
-        paths = [
-          {
-            path     = "/"
-            pathType = "ImplementationSpecific"
-          }
-        ]
-      },
-      {
-        host = local.domain_full,
-        paths = [
-          {
-            path     = "/"
-            pathType = "ImplementationSpecific"
-          }
-        ]
-      }
+        {
+          host = local.domain,
+          paths = [
+            {
+              path     = "/"
+              pathType = "ImplementationSpecific"
+            }
+          ]
+        },
+        {
+          host = local.domain_full,
+          paths = [
+            {
+              path     = "/"
+              pathType = "ImplementationSpecific"
+            }
+          ]
+        }
       ]
     }
 

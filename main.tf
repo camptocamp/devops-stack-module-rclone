@@ -36,7 +36,7 @@ data "utils_deep_merge_yaml" "values" {
 }
 
 resource "random_string" "oauth2_cookie_secret" {
-  length = 16
+  length  = 16
   special = false
 }
 
