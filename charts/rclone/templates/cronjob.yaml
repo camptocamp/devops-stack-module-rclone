@@ -38,15 +38,7 @@ spec:
               {{- range $schedule.rcloneCmd}}
               - {{ . }}
               {{- end }}
-            #volumeMounts:
-            #  - name: rclone-config
-            #    mountPath: /config/rclone
-            #    readOnly: true
           restartPolicy: OnFailure
-          {{/* volumes: */}}
-          {{/* - name: rclone-config */}}
-          {{/*   configMap: */}}
-          {{/*     name: rclone-backend */}}
 ---
 {{- end }}
 {{- end }}
