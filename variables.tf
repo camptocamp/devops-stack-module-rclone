@@ -82,18 +82,18 @@ variable "oidc" {
 }
 
 variable "rclone_enable_webui" {
-  description = "Set to true to enable the WebUI of Rclone"
+  description = "Boolean to enable the WebUI of Rclone."
   type        = bool
   default     = true
 }
 
 variable "rclone_config_file" {
-  description = "Configuration of all Rclone backends"
+  description = "Configuration of all Rclone backends." # TODO Maybe add a better description of how to configure this variable.
   type        = string
 }
 
 variable "enable_grafana_dashboard" {
-  description = "Whether to add a monitoring dashboard to Grafana"
+  description = "Boolean to add a monitoring dashboard to Grafana."
   type        = bool
   default     = false
 }

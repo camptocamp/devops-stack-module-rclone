@@ -1,6 +1,6 @@
 ---
 name: "rclone"
-title: "Module Rclone"
+title: "Rclone Module"
 version: true
 start_page: README.adoc
 nav:

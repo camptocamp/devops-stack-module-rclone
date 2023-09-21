@@ -12,7 +12,7 @@ resource "argocd_project" "this" {
   }
 
   spec {
-    description  = "rclone application project"
+    description  = "Rclone application project"
     source_repos = ["https://github.com/camptocamp/devops-stack-module-rclone.git"]
 
     destination {
@@ -36,7 +36,7 @@ data "utils_deep_merge_yaml" "values" {
 }
 
 resource "random_string" "oauth2_cookie_secret" {
-  length  = 16
+  length  = 32
   special = false
 }
 

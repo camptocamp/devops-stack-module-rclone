@@ -1,3 +1,5 @@
 * xref:ROOT:README.adoc[Home]
-* https://github.com/camptocamp/devops-stack-module-template/[Repository,window=_blank]
+* Module Variants
+** xref:ROOT:aks/README.adoc[AKS]
+* https://github.com/camptocamp/devops-stack-module-rclone/[Repository,window=_blank]
 * xref:ROOT:ROOT:index.adoc[_Return to DevOps Stack docs_]
