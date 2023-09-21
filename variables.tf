@@ -90,6 +90,7 @@ variable "rclone_enable_webui" {
 variable "rclone_config_file" {
   description = "Configuration of all Rclone backends." # TODO Maybe add a better description of how to configure this variable.
   type        = string
+  sensitive   = true
 }
 
 variable "enable_grafana_dashboard" {
@@ -105,7 +106,7 @@ variable "schedules" {
     labels      = optional(map(string), {})
     annotations = optional(map(string), {})
     schedule    = string
-    rcloneCmd = list(string)
+    rcloneCmd   = list(string)
     # srcFs              = string
     # dstFs              = string
     # rcloneCmd       = optional(string, "sync/copy")

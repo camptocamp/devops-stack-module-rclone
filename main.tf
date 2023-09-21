@@ -120,6 +120,7 @@ resource "argocd_application" "this" {
 
   depends_on = [
     resource.null_resource.dependencies,
+    resource.kubernetes_secret.rclone_config_secret
   ]
 }
 

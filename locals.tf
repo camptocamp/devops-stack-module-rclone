@@ -9,8 +9,6 @@ locals {
       port = 5572
     }
 
-    rclone_config_file = var.rclone_config_file
-
     ingress = {
       enabled   = var.rclone_enable_webui
       classname = ""

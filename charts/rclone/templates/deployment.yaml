@@ -119,5 +119,5 @@ spec:
       {{- end }}
       volumes:
       - name: rclone-config
-        configMap:
-          name: rclone-backend
+        secret:
+          secretName: rclone-config-file
