@@ -68,11 +68,11 @@ The following providers are used by this module:
 
 - [[provider_null]] <<provider_null,null>> (>= 3)
 
-- [[provider_argocd]] <<provider_argocd,argocd>> (>= 5)
-
 - [[provider_utils]] <<provider_utils,utils>> (>= 1)
 
 - [[provider_random]] <<provider_random,random>>
+
+- [[provider_argocd]] <<provider_argocd,argocd>> (>= 5)
 
 === Resources
 
@@ -213,7 +213,7 @@ Default: `true`
 
 ==== [[input_enable_grafana_dashboard]] <<input_enable_grafana_dashboard,enable_grafana_dashboard>>
 
-Description: Configuration of all Rclone backends
+Description: Whether to add a monitoring dashboard to Grafana
 
 Type: `bool`
 
@@ -380,7 +380,7 @@ object({
 |yes
 
 |[[input_enable_grafana_dashboard]] <<input_enable_grafana_dashboard,enable_grafana_dashboard>>
-|Configuration of all Rclone backends
+|Whether to add a monitoring dashboard to Grafana
 |`bool`
 |`false`
 |no
