@@ -4,11 +4,6 @@ locals {
 
   helm_values = [{
 
-    service = {
-      type = "ClusterIP"
-      port = 5572
-    }
-
     ingress = {
       enabled   = var.rclone_enable_webui
       classname = ""

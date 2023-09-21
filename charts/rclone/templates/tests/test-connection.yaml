@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "rclone.fullname" . }}:{{ .Values.service.port }}']
+      args: ['{{ include "rclone.fullname" . }}:5572']
   restartPolicy: Never

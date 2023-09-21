@@ -2,15 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
 image:
   repository: rclone/rclone
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
-# imagePullSecrets: []
+imagePullSecrets: []
 # nameOverride: ""
 # fullnameOverride: ""
 
@@ -27,10 +25,10 @@ serviceAccount:
 podAnnotations: {}
 podLabels: {}
 
-# podSecurityContext: {}
+podSecurityContext: {}
 #   # fsGroup: 2000
 
-# securityContext: {}
+securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -38,27 +36,22 @@ podLabels: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-# service:
-#   type: ClusterIP
-#   port: 5572
-
 ingress:
   enabled: false
 #   className: ""
   annotations: {}
 #   hosts:
-#     - host: rclone.apps.green.is-internal.camptocamp.com
+#     - host: rclone.example.com
 #       paths:
 #         - path: /
 #           pathType: ImplementationSpecific
 #   tls:
 #    - secretName: rclone-tls
 #      hosts:
-#        - rclone.apps.green.is-internal.camptocamp.com
+#        - rclone.example.com
 
-# metrics:
-#   enabled: true
-
+metrics:
+  enabled: false
 #   serviceMonitor:
 #     autodetect: true
 #     enabled: true
@@ -83,7 +76,7 @@ ingress:
 #   oauth2_proxy_image: "quay.io/oauth2-proxy/oauth2-proxy:v7.4.0"
 #   issuer_url: var.oidc
 
-# resources: {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -94,13 +87,6 @@ ingress:
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
 

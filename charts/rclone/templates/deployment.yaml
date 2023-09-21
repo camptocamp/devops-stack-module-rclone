@@ -5,9 +5,7 @@ metadata:
   labels:
     {{- include "rclone.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: 1
   selector:
     matchLabels:
       {{- include "rclone.selectorLabels" . | nindent 6 }}
@@ -38,7 +36,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 5572
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -53,7 +51,7 @@ spec:
           command:
             - rclone
             - rcd
-            - --rc-addr=:{{ .Values.service.port }}
+            - --rc-addr=:5572
             - --rc-enable-metrics
             {{- if .Values.ingress.enabled }}
             - --rc-web-gui
