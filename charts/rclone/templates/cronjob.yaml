@@ -34,7 +34,7 @@ spec:
               - rclone
               - rc
               - --rc-addr
-              - rclone:5572
+              - {{ include "rclone.fullname" $ }}:5572
               {{- range $schedule.rcloneCmd}}
               - {{ . }}
               {{- end }}

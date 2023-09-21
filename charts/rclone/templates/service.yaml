@@ -9,11 +9,15 @@ metadata:
     helm.sh/chart: {{ include "rclone.chart" . }}
     {{- include "rclone.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
     - port: 4180
       targetPort: proxy
       protocol: TCP
       name: rclone-proxy
+    - port: 5572
+      targetPort: http
+      protocol: TCP
+      name: rclone
   selector:
     {{- include "rclone.selectorLabels" . | nindent 4 }}
