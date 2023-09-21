@@ -64,7 +64,7 @@ ingress:
 #     enabled: true
 #     annotations: {}
 #     additionalLabels: {}
-#     # ServiceMonitor namespace. Default to Velero namespace.
+#     # ServiceMonitor namespace. Default to Rclone namespace.
 #     # namespace:
 #     # ServiceMonitor connection scheme. Defaults to HTTP.
 #     # scheme: ""
@@ -74,7 +74,7 @@ ingress:
 #     enabled: false
 #     # Additional labels to add to deployed PrometheusRule
 #     additionalLabels: {}
-#     # PrometheusRule namespace. Defaults to Velero namespace.
+#     # PrometheusRule namespace. Defaults to Rclone namespace.
 #     # namespace: ""
 #     # Rules to be deployed
 #     spec: []

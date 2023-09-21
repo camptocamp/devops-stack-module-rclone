@@ -43,7 +43,7 @@ locals {
         }
       ]
     }
-
+    schedules = var.schedules
     metrics = {
       enabled = true
       serviceMonitor = {
