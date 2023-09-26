@@ -2,11 +2,14 @@
 
 This version of the Rclone module can take advantage of Azure AD Workload Identities (AZWI), in order to access resources on Azure cloud. An introduction to AZWI can be found https://azure.github.io/azure-workload-identity/docs/quick-start.html[Here].
 
-Here is an example of usage:
+Here below is an example of usage. The resource group, storage account, storage container and federated identities are
+not strictly needed by the module, but are inlcuded as an exemple of how to manage them with Terraform, and how to ensure access to the
+Rclone pod to those resources.
 
 
 [source,terraform]
 ----
+
 resource "azurerm_resource_group" "myresourcegroup" {
   name     = "myresourcegroup"
   location = "francecentral"
@@ -41,7 +44,7 @@ resource "azurerm_federated_identity_credential" "rclone" {
   subject             = "rclone"
 }
 
-module "rclone-green" {
+module "rclone" {
 
   providers = {
     argocd = argocd.green
@@ -51,7 +54,7 @@ module "rclone-green" {
   source          = "git::https://github.com/camptocamp/devops-stack-module-rclone.git//aks?ref=aks"
   target_revision = "schedules"
 
-  cluster_name     = "green"
+  cluster_name     = "mycluster"
   argocd_namespace = module.argocd_green.argocd_namespace
   base_domain = azurerm_dns_zone.is_internal.name
 
@@ -61,6 +64,7 @@ module "rclone-green" {
 
   # Here is the config file from Rclone. This can be generated with the
   # `rclone config` command. See the documentation of Rclone to get more informations.
+  #
   rclone_config_file = <<-EOT
   [MyStorageSystem]
   type = s3
@@ -72,17 +76,39 @@ module "rclone-green" {
 
   [azure]
   type = azureblob
-  account = trosseldevbackup
+  account = mystorageaccount
   sas_url = https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER_NAME>?sp=...
   EOT
 
+  # Add a dashboard to the deployed Grafana (default: true)
   enable_grafana_dashboard = true
 
   schedules = {
-    test-schedule = {
-      disabled  = false
+
+    # This schedule makes a backup of the full storage account in the azure directory (source)
+	# to the bucket `azure-backup`, in the `myminio` remote (destination).
+	# It is triggered every morning at 04:02 am.
+    full-backup = {
+      # Uncomment this line in order to stop the trigger:
+	  # disabled  = true
+
+	  # Cron-style schedule
       schedule  = "2 4 * * *"
-      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/test2", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
+
+	  # The command to send to the Rclone server. More commands can be found here:
+	  # https://rclone.org/rc/
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:azure-backup", "--immutable"]
+    }
+
+	# This schedule makes a backup of only a directory in a Azure container
+	# It also uses the commmand `sync/sync`, which delete extra files in the remote
+    partial-backup = {
+      # Cron-style schedule
+      schedule  = "2 4 * * *"
+
+	  # The command to send to the Rclone server. More commands can be found here:
+	  # https://rclone.org/rc/
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/full-storage-account", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
     }
   }
 
