@@ -7,34 +7,34 @@ Here is an example of usage:
 
 [source,terraform]
 ----
-resource "azurerm_resource_group" "trossel" {
-  name     = "trossel"
+resource "azurerm_resource_group" "myresourcegroup" {
+  name     = "myresourcegroup"
   location = "francecentral"
 }
 
-resource "azurerm_storage_account" "trosseldevbackup" {
-  name                     = "trosseldevbackup"
-  resource_group_name      = azurerm_resource_group.trossel.name
-  location                 = azurerm_resource_group.trossel.location
+resource "azurerm_storage_account" "mystorageaccount" {
+  name                     = "mystorageaccount"
+  resource_group_name      = azurerm_resource_group.myresourcegroup.name
+  location                 = azurerm_resource_group.myresourcegroup.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
 
 resource "azurerm_storage_container" "backup" {
   name                  = "backup"
-  storage_account_name  = azurerm_storage_account.trosseldevbackup.name
+  storage_account_name  = azurerm_storage_account.mystorageaccount.name
   container_access_type = "private"
 }
 
 resource "azurerm_user_assigned_identity" "rclone" {
-  location            = azurerm_resource_group.trossel.location
+  location            = azurerm_resource_group.myresourcegroup.location
   name                = "rclone"
-  resource_group_name = azurerm_resource_group.trossel.name
+  resource_group_name = azurerm_resource_group.myresourcegroup.name
 }
 
 resource "azurerm_federated_identity_credential" "rclone" {
   name                = "rclone"
-  resource_group_name = azurerm_resource_group.trossel.name
+  resource_group_name = azurerm_resource_group.myresourcegroup.name
   audience            = ["rclone"]
   issuer              = local.oidc.issuer_url
   parent_id           = azurerm_user_assigned_identity.rclone.id
@@ -43,7 +43,53 @@ resource "azurerm_federated_identity_credential" "rclone" {
 
 module "rclone-green" {
 
-  # All parameters in the generic module version remain the same.
+  providers = {
+    argocd = argocd.green
+    kubernetes = kubernetes.green
+  }
+
+  source          = "git::https://github.com/camptocamp/devops-stack-module-rclone.git//aks?ref=aks"
+  target_revision = "schedules"
+
+  cluster_name     = "green"
+  argocd_namespace = module.argocd_green.argocd_namespace
+  base_domain = azurerm_dns_zone.is_internal.name
+
+  oidc = local.oidc
+
+  workload_identity_client_id = "<CLIENT_ID>"
+
+  # Here is the config file from Rclone. This can be generated with the
+  # `rclone config` command. See the documentation of Rclone to get more informations.
+  rclone_config_file = <<-EOT
+  [MyStorageSystem]
+  type = s3
+  provider = Minio
+  access_key_id = <USER_LOGIN>
+  secret_access_key = <SECRET_KEY>
+  endpoint = https://minio.example.com
+  acl = public-read
+
+  [azure]
+  type = azureblob
+  account = trosseldevbackup
+  sas_url = https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER_NAME>?sp=...
+  EOT
+
+  enable_grafana_dashboard = true
+
+  schedules = {
+    test-schedule = {
+      disabled  = false
+      schedule  = "2 4 * * *"
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/test2", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
+    }
+  }
+
+  dependency_ids = {
+    azure-workload-identity = module.azure-workload-identity_green.id
+  }
+}
 
   workload_identity_client_id = "59e2e5be-7f07-4772-b343-a59e7eb79510"
 

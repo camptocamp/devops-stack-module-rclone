@@ -17,65 +17,10 @@ NOTE: Since we haven't found a proper Helm chart to deploy Rclone, we created on
 
 == Usage
 
+For an example of deployment, please see the variants documentation.
+
+
 This module can be declared by adding the following block on your Terraform configuration:
-
-[source,terraform]
-----
-module "rclone-green" {
-  providers = {
-    argocd = argocd.green
-    kubernetes = kubernetes.green
-  }
-
-  # source          = "git::https://github.com/camptocamp/devops-stack-module-rclone.git//aks?ref=aks"
-  source          = "../module-rclone/aks"
-  target_revision = "schedules"
-
-  # cluster_oidc_issuer_url      = module.cluster_green.oidc_issuer_url
-  cluster_name     = "green"
-  argocd_namespace = module.argocd_green.argocd_namespace
-  # node_resource_group_name     = module.cluster_green.node_resource_group
-  # dns_zone_resource_group_name = azurerm_resource_group.default.name
-  base_domain = azurerm_dns_zone.is_internal.name
-  # enable_service_monitor       = false
-
-  oidc = local.oidc
-
-  workload_identity_client_id = "59e2e5be-7f07-4772-b343-a59e7eb79510"
-
-  rclone_config_file = <<-EOT
-  [myminio]
-  type = s3
-  provider = Minio
-  access_key_id = devopsadmin
-  secret_access_key = DvomF93UWBWlAmd6rhDckqZ859niPUgItpataMKihkFOCs7Ssi
-  endpoint = https://minio.tyrossel.ch
-  acl = public-read
-
-  [azure]
-  type = azureblob
-  account = trosseldevbackup
-  sas_url = https://trosseldevbackup.blob.core.windows.net/backup?sp=racwdl&st=2023-08-22T07:10:08Z&se=2023-09-30T15:10:08Z&spr=https&sv=2022-11-02&sr=c&sig=fPbnkHgr6pIjaR5WMP%2BuOvcpzGkPP8h3jYGMjPhznjU%3D
-  EOT
-
-  enable_grafana_dashboard = true
-
-  schedules = {
-    test-schedule = {
-      disabled  = false
-      schedule  = "2 4 * * *"
-      # rcloneCmd = ["config/listremotes"]
-      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/test2", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
-      # args : ["copy", "azure:", "offsite:", "--immutable", "--checksum", "--ignore-size", "--use-json-log"]
-    }
-  }
-
-  dependency_ids = {
-    azure-workload-identity = module.azure-workload-identity_green.id
-  }
-}
-----
-
 
 == Technical Reference
 
