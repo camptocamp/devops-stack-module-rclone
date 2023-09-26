@@ -1,1 +1,55 @@
 = AKS Variant
+
+This version of the Rclone module can take advantage of Azure AD Workload Identities (AZWI), in order to access resources on Azure cloud. An introduction to AZWI can be found https://azure.github.io/azure-workload-identity/docs/quick-start.html[Here].
+
+Here is an example of usage:
+
+
+[source,terraform]
+----
+resource "azurerm_resource_group" "trossel" {
+  name     = "trossel"
+  location = "francecentral"
+}
+
+resource "azurerm_storage_account" "trosseldevbackup" {
+  name                     = "trosseldevbackup"
+  resource_group_name      = azurerm_resource_group.trossel.name
+  location                 = azurerm_resource_group.trossel.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_container" "backup" {
+  name                  = "backup"
+  storage_account_name  = azurerm_storage_account.trosseldevbackup.name
+  container_access_type = "private"
+}
+
+resource "azurerm_user_assigned_identity" "rclone" {
+  location            = azurerm_resource_group.trossel.location
+  name                = "rclone"
+  resource_group_name = azurerm_resource_group.trossel.name
+}
+
+resource "azurerm_federated_identity_credential" "rclone" {
+  name                = "rclone"
+  resource_group_name = azurerm_resource_group.trossel.name
+  audience            = ["rclone"]
+  issuer              = local.oidc.issuer_url
+  parent_id           = azurerm_user_assigned_identity.rclone.id
+  subject             = "rclone"
+}
+
+module "rclone-green" {
+
+  # All parameters in the generic module version remain the same.
+
+  workload_identity_client_id = "59e2e5be-7f07-4772-b343-a59e7eb79510"
+
+  dependency_ids = {
+    azure-workload-identity = module.azure-workload-identity_green.id
+  }
+}
+
+----

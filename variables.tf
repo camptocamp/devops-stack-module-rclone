@@ -107,10 +107,6 @@ variable "schedules" {
     annotations = optional(map(string), {})
     schedule    = string
     rcloneCmd   = list(string)
-    # srcFs              = string
-    # dstFs              = string
-    # rcloneCmd       = optional(string, "sync/copy")
-    # rcloneExtraArgs = optional(list(string), [])
   }))
   default = {}
 }

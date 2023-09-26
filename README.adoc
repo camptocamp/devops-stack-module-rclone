@@ -1,5 +1,4 @@
 = devops-stack-module-rclone
-// Document attributes to replace along the document
 :chart-version: 1.0.0
 
 A https://devops-stack.io[DevOps Stack] module to deploy https://rclone.org/[Rclone].
@@ -12,7 +11,7 @@ A https://devops-stack.io[DevOps Stack] module to deploy https://rclone.org/[Rcl
 
 *Since this module is meant to be instantiated using its variants, the usage documentation is available in each variant* ( xref:./aks/README.adoc[AKS] ).
 
-NOTE: Since we haven't found a proper Helm chart to deploy Rclone, we created one ourselves and packaged it inside this repository. 
+NOTE: Since we haven't found a proper Helm chart to deploy Rclone, we created one ourselves and packaged it inside this repository.
 
 // TODO From here
 
@@ -22,27 +21,61 @@ This module can be declared by adding the following block on your Terraform conf
 
 [source,terraform]
 ----
-module "rclone" {
-  source = "git::https://github.com/camptocamp/devops-stack-module-template.git?ref=<RELEASE>"
+module "rclone-green" {
+  providers = {
+    argocd = argocd.green
+    kubernetes = kubernetes.green
+  }
 
-  cluster_name            = local.cluster_name
-  argocd_namespace        = local.argocd_namespace
+  # source          = "git::https://github.com/camptocamp/devops-stack-module-rclone.git//aks?ref=aks"
+  source          = "../module-rclone/aks"
+  target_revision = "schedules"
+
+  # cluster_oidc_issuer_url      = module.cluster_green.oidc_issuer_url
+  cluster_name     = "green"
+  argocd_namespace = module.argocd_green.argocd_namespace
+  # node_resource_group_name     = module.cluster_green.node_resource_group
+  # dns_zone_resource_group_name = azurerm_resource_group.default.name
+  base_domain = azurerm_dns_zone.is_internal.name
+  # enable_service_monitor       = false
+
+  oidc = local.oidc
+
+  workload_identity_client_id = "59e2e5be-7f07-4772-b343-a59e7eb79510"
+
+  rclone_config_file = <<-EOT
+  [myminio]
+  type = s3
+  provider = Minio
+  access_key_id = devopsadmin
+  secret_access_key = DvomF93UWBWlAmd6rhDckqZ859niPUgItpataMKihkFOCs7Ssi
+  endpoint = https://minio.tyrossel.ch
+  acl = public-read
+
+  [azure]
+  type = azureblob
+  account = trosseldevbackup
+  sas_url = https://trosseldevbackup.blob.core.windows.net/backup?sp=racwdl&st=2023-08-22T07:10:08Z&se=2023-09-30T15:10:08Z&spr=https&sv=2022-11-02&sr=c&sig=fPbnkHgr6pIjaR5WMP%2BuOvcpzGkPP8h3jYGMjPhznjU%3D
+  EOT
+
+  enable_grafana_dashboard = true
+
+  schedules = {
+    test-schedule = {
+      disabled  = false
+      schedule  = "2 4 * * *"
+      # rcloneCmd = ["config/listremotes"]
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/test2", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
+      # args : ["copy", "azure:", "offsite:", "--immutable", "--checksum", "--ignore-size", "--use-json-log"]
+    }
+  }
 
   dependency_ids = {
-    argocd                = module.argocd_bootstrap.id
-    traefik               = module.traefik.id
-    cert-manager          = module.cert-manager.id
-    oidc                  = module.oidc.id
-    kube-prometheus-stack = module.kube-prometheus-stack.id
+    azure-workload-identity = module.azure-workload-identity_green.id
   }
 }
 ----
 
-=== Something Explained Better
-
-_If there is some part of the module's configuration that needs more specific explanations, such as a very particular output on which every other module depends on, maybe consider creating a subsection to improve readability._
-
-NOTE: _The AsciiDoc syntax provides a way to write admonitions such as this one, so use it if you think it is useful. The https://docs.antora.org/antora/latest/asciidoc/admonitions/[official documentation] for Antora Docs provides more examples._
 
 == Technical Reference
 
