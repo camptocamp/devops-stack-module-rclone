@@ -1,0 +1,44 @@
+{{- range $scheduleName, $schedule := .Values.schedules }}
+{{- if (not $schedule.disabled) }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "rclone.fullname" $ }}-{{ $scheduleName }}
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+  {{- if $schedule.annotations }}
+    {{- toYaml $schedule.annotations | nindent 4 }}
+  {{- end }}
+    "helm.sh/hook": post-install,post-upgrade,post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation
+  labels:
+    app.kubernetes.io/name: {{ include "rclone.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    helm.sh/chart: {{ include "rclone.chart" $ }}
+    {{- if $schedule.labels }}
+      {{- toYaml $schedule.labels | nindent 4 }}
+    {{- end }}
+spec:
+  schedule: {{ $schedule.schedule | quote }}
+  suspend: {{ $schedule.disabled }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: rclone-client
+            image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+            imagePullPolicy: IfNotPresent
+            command:
+              - rclone
+              - rc
+              - --rc-addr
+              - {{ include "rclone.fullname" $ }}:5572
+              {{- range $schedule.rcloneCmd}}
+              - {{ . }}
+              {{- end }}
+          restartPolicy: OnFailure
+---
+{{- end }}
+{{- end }}

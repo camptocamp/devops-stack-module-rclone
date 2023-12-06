@@ -33,7 +33,7 @@ variable "cluster_issuer" {
 variable "namespace" {
   description = "Namespace where the applications's Kubernetes resources should be created. Namespace will be created in case it doesn't exist."
   type        = string
-  default     = "<NAMESPACE>"
+  default     = "rclone"
 }
 
 variable "helm_values" {
@@ -65,3 +65,48 @@ variable "dependency_ids" {
 #######################
 ## Module variables
 #######################
+
+
+variable "oidc" {
+  description = "OIDC settings to configure OAuth2-Proxy which will be used to protect Rclone's dashboard."
+  type = object({
+    issuer_url              = string
+    oauth_url               = optional(string, "")
+    token_url               = optional(string, "")
+    api_url                 = optional(string, "")
+    client_id               = string
+    client_secret           = string
+    oauth2_proxy_extra_args = optional(list(string), [])
+  })
+  default = null
+}
+
+variable "rclone_enable_webui" {
+  description = "Boolean to enable the WebUI of Rclone."
+  type        = bool
+  default     = true
+}
+
+variable "rclone_config_file" {
+  description = "Configuration of all Rclone backends." # TODO Maybe add a better description of how to configure this variable.
+  type        = string
+  sensitive   = true
+}
+
+variable "enable_grafana_dashboard" {
+  description = "Boolean to add a monitoring dashboard to Grafana."
+  type        = bool
+  default     = false
+}
+
+variable "schedules" {
+  description = "list of cronjobs to execute"
+  type = map(object({
+    disabled    = optional(bool, false)
+    labels      = optional(map(string), {})
+    annotations = optional(map(string), {})
+    schedule    = string
+    rcloneCmd   = list(string)
+  }))
+  default = {}
+}

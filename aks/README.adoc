@@ -1,0 +1,127 @@
+= AKS Variant
+
+This version of the Rclone module can take advantage of Azure AD Workload Identities (AZWI), in order to access resources on Azure cloud. An introduction to AZWI can be found https://azure.github.io/azure-workload-identity/docs/quick-start.html[Here].
+
+Here below is an example of usage. The resource group, storage account, storage container and federated identities are
+not strictly needed by the module, but are inlcuded as an exemple of how to manage them with Terraform, and how to ensure access to the
+Rclone pod to those resources.
+
+
+[source,terraform]
+----
+
+resource "azurerm_resource_group" "myresourcegroup" {
+  name     = "myresourcegroup"
+  location = "francecentral"
+}
+
+resource "azurerm_storage_account" "mystorageaccount" {
+  name                     = "mystorageaccount"
+  resource_group_name      = azurerm_resource_group.myresourcegroup.name
+  location                 = azurerm_resource_group.myresourcegroup.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_container" "backup" {
+  name                  = "backup"
+  storage_account_name  = azurerm_storage_account.mystorageaccount.name
+  container_access_type = "private"
+}
+
+resource "azurerm_user_assigned_identity" "rclone" {
+  location            = azurerm_resource_group.myresourcegroup.location
+  name                = "rclone"
+  resource_group_name = azurerm_resource_group.myresourcegroup.name
+}
+
+resource "azurerm_federated_identity_credential" "rclone" {
+  name                = "rclone"
+  resource_group_name = azurerm_resource_group.myresourcegroup.name
+  audience            = ["rclone"]
+  issuer              = local.oidc.issuer_url
+  parent_id           = azurerm_user_assigned_identity.rclone.id
+  subject             = "rclone"
+}
+
+module "rclone" {
+
+  providers = {
+    argocd = argocd.green
+    kubernetes = kubernetes.green
+  }
+
+  source          = "git::https://github.com/camptocamp/devops-stack-module-rclone.git//aks?ref=aks"
+  target_revision = "schedules"
+
+  cluster_name     = "mycluster"
+  argocd_namespace = module.argocd_green.argocd_namespace
+  base_domain = azurerm_dns_zone.is_internal.name
+
+  oidc = local.oidc
+
+  workload_identity_client_id = "<CLIENT_ID>"
+
+  # Here is the config file from Rclone. This can be generated with the
+  # `rclone config` command. See the documentation of Rclone to get more informations.
+  #
+  rclone_config_file = <<-EOT
+  [MyStorageSystem]
+  type = s3
+  provider = Minio
+  access_key_id = <USER_LOGIN>
+  secret_access_key = <SECRET_KEY>
+  endpoint = https://minio.example.com
+  acl = public-read
+
+  [azure]
+  type = azureblob
+  account = mystorageaccount
+  sas_url = https://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER_NAME>?sp=...
+  EOT
+
+  # Add a dashboard to the deployed Grafana (default: true)
+  enable_grafana_dashboard = true
+
+  schedules = {
+
+    # This schedule makes a backup of the full storage account in the azure directory (source)
+	# to the bucket `azure-backup`, in the `myminio` remote (destination).
+	# It is triggered every morning at 04:02 am.
+    full-backup = {
+      # Uncomment this line in order to stop the trigger:
+	  # disabled  = true
+
+	  # Cron-style schedule
+      schedule  = "2 4 * * *"
+
+	  # The command to send to the Rclone server. More commands can be found here:
+	  # https://rclone.org/rc/
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:azure-backup", "--immutable"]
+    }
+
+	# This schedule makes a backup of only a directory in a Azure container
+	# It also uses the commmand `sync/sync`, which delete extra files in the remote
+    partial-backup = {
+      # Cron-style schedule
+      schedule  = "2 4 * * *"
+
+	  # The command to send to the Rclone server. More commands can be found here:
+	  # https://rclone.org/rc/
+      rcloneCmd = ["sync/copy", "srcFs=azure:/", "dstFs=myminio:rclone/full-storage-account", "--immutable", "--checksum", "--ignore-size", "--use-json-log", "-vv"]
+    }
+  }
+
+  dependency_ids = {
+    azure-workload-identity = module.azure-workload-identity_green.id
+  }
+}
+
+  workload_identity_client_id = "59e2e5be-7f07-4772-b343-a59e7eb79510"
+
+  dependency_ids = {
+    azure-workload-identity = module.azure-workload-identity_green.id
+  }
+}
+
+----

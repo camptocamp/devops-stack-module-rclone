@@ -1,45 +1,26 @@
 = devops-stack-module-rclone
-// Document attributes to replace along the document
-// Here you can define variables for something that keeps repeating along the text
-:CHART-NAME-chart-version: 1.2.3
-:original-repo-url: https://github.com/path/to/some/repository
+:chart-version: 1.0.0
 
-A https://devops-stack.io[DevOps Stack] module to deploy rclone.
-
-The *_something_* chart used by this module is shipped in this repository as well, in order to avoid any unwanted behaviors caused by unsupported versions.
+A https://devops-stack.io[DevOps Stack] module to deploy https://rclone.org/[Rclone].
 
 [cols="1,1,1",options="autowidth,header"]
 |===
 |Current Chart Version |Original Repository |Default Values
-|*{CHART-NAME-chart-version}* |{original-repo-url}/subpath/to/the/chart[Chart] |{original-repo-url}//subpath/to/the/values.yaml[`values.yaml`] (_here you can also use artifacthub.io_)
+|*{chart-version}* |https://github.com/camptocamp/devops-stack-module-rclone/blob/v{chart-version}/charts/rclone/[Chart] |https://github.com/camptocamp/devops-stack-module-rclone/blob/v{chart-version}/charts/rclone/values.yaml[`values.yaml`]
 |===
+
+*Since this module is meant to be instantiated using its variants, the usage documentation is available in each variant* ( xref:./aks/README.adoc[AKS] ).
+
+NOTE: Since we haven't found a proper Helm chart to deploy Rclone, we created one ourselves and packaged it inside this repository.
+
+// TODO From here
 
 == Usage
 
-_Here you will show examples of how to call this module on your code. Note that the `depends_on` needs to be adapted to your use case._
+For an example of deployment, please see the variants documentation.
 
-_You can start by giving a simple example and then show some others with increasing complexity and/or for specific use cases._
 
-[source,terraform]
-----
-module "template" {
-  source = "git::https://github.com/camptocamp/devops-stack-module-template.git?ref=<RELEASE>"
-
-  cluster_name            = local.cluster_name
-  argocd_namespace        = local.argocd_namespace
-
-  # TODO Consider replacing this depends_on by our dependency_ids
-  depends_on = [
-    module.argocd_bootstrap,
-  ]
-}
-----
-
-=== Something Explained Better
-
-_If there is some part of the module's configuration that needs more specific explanations, such as a very particular output on which every other module depends on, maybe consider creating a subsection to improve readability._
-
-NOTE: _The AsciiDoc syntax provides a way to write admonitions such as this one, so use it if you think it is useful. The https://docs.antora.org/antora/latest/asciidoc/admonitions/[official documentation] for Antora Docs provides more examples._
+This module can be declared by adding the following block on your Terraform configuration:
 
 == Technical Reference
 
@@ -60,6 +41,8 @@ The following requirements are needed by this module:
 
 - [[requirement_argocd]] <<requirement_argocd,argocd>> (>= 5)
 
+- [[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> (>= 2)
+
 - [[requirement_null]] <<requirement_null,null>> (>= 3)
 
 - [[requirement_utils]] <<requirement_utils,utils>> (>= 1)
@@ -69,6 +52,10 @@ The following requirements are needed by this module:
 The following providers are used by this module:
 
 - [[provider_utils]] <<provider_utils,utils>> (>= 1)
+
+- [[provider_random]] <<provider_random,random>>
+
+- [[provider_kubernetes]] <<provider_kubernetes,kubernetes>> (>= 2)
 
 - [[provider_argocd]] <<provider_argocd,argocd>> (>= 5)
 
@@ -80,8 +67,11 @@ The following resources are used by this module:
 
 - https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] (resource)
 - https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] (resource)
+- https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace[kubernetes_namespace.rclone_namespace] (resource)
+- https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret[kubernetes_secret.rclone_config_secret] (resource)
 - https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] (resource)
 - https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] (resource)
+- https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string[random_string.oauth2_cookie_secret] (resource)
 - https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] (data source)
 
 === Required Inputs
@@ -97,6 +87,12 @@ Type: `string`
 ==== [[input_base_domain]] <<input_base_domain,base_domain>>
 
 Description: Base domain of the cluster. Value used for the ingress' URL of the application.
+
+Type: `string`
+
+==== [[input_rclone_config_file]] <<input_rclone_config_file,rclone_config_file>>
+
+Description: Configuration of all Rclone backends.
 
 Type: `string`
 
@@ -134,7 +130,7 @@ Description: Namespace where the applications's Kubernetes resources should be c
 
 Type: `string`
 
-Default: `"<NAMESPACE>"`
+Default: `"rclone"`
 
 ==== [[input_helm_values]] <<input_helm_values,helm_values>>
 
@@ -176,6 +172,60 @@ Type: `map(string)`
 
 Default: `{}`
 
+==== [[input_oidc]] <<input_oidc,oidc>>
+
+Description: OIDC settings to configure OAuth2-Proxy which will be used to protect Rclone's dashboard.
+
+Type:
+[source,hcl]
+----
+object({
+    issuer_url              = string
+    oauth_url               = optional(string, "")
+    token_url               = optional(string, "")
+    api_url                 = optional(string, "")
+    client_id               = string
+    client_secret           = string
+    oauth2_proxy_extra_args = optional(list(string), [])
+  })
+----
+
+Default: `null`
+
+==== [[input_rclone_enable_webui]] <<input_rclone_enable_webui,rclone_enable_webui>>
+
+Description: Boolean to enable the WebUI of Rclone.
+
+Type: `bool`
+
+Default: `true`
+
+==== [[input_enable_grafana_dashboard]] <<input_enable_grafana_dashboard,enable_grafana_dashboard>>
+
+Description: Boolean to add a monitoring dashboard to Grafana.
+
+Type: `bool`
+
+Default: `false`
+
+==== [[input_schedules]] <<input_schedules,schedules>>
+
+Description: list of cronjobs to execute
+
+Type:
+[source,hcl]
+----
+map(object({
+    disabled    = optional(bool, false)
+    labels      = optional(map(string), {})
+    annotations = optional(map(string), {})
+    schedule    = string
+    rcloneCmd   = list(string)
+  }))
+----
+
+Default: `{}`
+
 === Outputs
 
 The following outputs are exported:
@@ -197,6 +247,7 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |===
 |Name |Version
 |[[requirement_argocd]] <<requirement_argocd,argocd>> |>= 5
+|[[requirement_kubernetes]] <<requirement_kubernetes,kubernetes>> |>= 2
 |[[requirement_null]] <<requirement_null,null>> |>= 3
 |[[requirement_utils]] <<requirement_utils,utils>> |>= 1
 |===
@@ -206,9 +257,11 @@ Description: ID to pass other modules in order to refer to this module as a depe
 [cols="a,a",options="header,autowidth"]
 |===
 |Name |Version
-|[[provider_utils]] <<provider_utils,utils>> |>= 1
-|[[provider_argocd]] <<provider_argocd,argocd>> |>= 5
 |[[provider_null]] <<provider_null,null>> |>= 3
+|[[provider_utils]] <<provider_utils,utils>> |>= 1
+|[[provider_random]] <<provider_random,random>> |n/a
+|[[provider_kubernetes]] <<provider_kubernetes,kubernetes>> |>= 2
+|[[provider_argocd]] <<provider_argocd,argocd>> |>= 5
 |===
 
 = Resources
@@ -218,8 +271,11 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |Name |Type
 |https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/application[argocd_application.this] |resource
 |https://registry.terraform.io/providers/oboukili/argocd/latest/docs/resources/project[argocd_project.this] |resource
+|https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace[kubernetes_namespace.rclone_namespace] |resource
+|https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret[kubernetes_secret.rclone_config_secret] |resource
 |https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.dependencies] |resource
 |https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource[null_resource.this] |resource
+|https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string[random_string.oauth2_cookie_secret] |resource
 |https://registry.terraform.io/providers/cloudposse/utils/latest/docs/data-sources/deep_merge_yaml[utils_deep_merge_yaml.values] |data source
 |===
 
@@ -261,7 +317,7 @@ Description: ID to pass other modules in order to refer to this module as a depe
 |[[input_namespace]] <<input_namespace,namespace>>
 |Namespace where the applications's Kubernetes resources should be created. Namespace will be created in case it doesn't exist.
 |`string`
-|`"<NAMESPACE>"`
+|`"rclone"`
 |no
 
 |[[input_helm_values]] <<input_helm_values,helm_values>>
@@ -299,6 +355,62 @@ object({
 |[[input_dependency_ids]] <<input_dependency_ids,dependency_ids>>
 |IDs of the other modules on which this module depends on.
 |`map(string)`
+|`{}`
+|no
+
+|[[input_oidc]] <<input_oidc,oidc>>
+|OIDC settings to configure OAuth2-Proxy which will be used to protect Rclone's dashboard.
+|
+
+[source]
+----
+object({
+    issuer_url              = string
+    oauth_url               = optional(string, "")
+    token_url               = optional(string, "")
+    api_url                 = optional(string, "")
+    client_id               = string
+    client_secret           = string
+    oauth2_proxy_extra_args = optional(list(string), [])
+  })
+----
+
+|`null`
+|no
+
+|[[input_rclone_enable_webui]] <<input_rclone_enable_webui,rclone_enable_webui>>
+|Boolean to enable the WebUI of Rclone.
+|`bool`
+|`true`
+|no
+
+|[[input_rclone_config_file]] <<input_rclone_config_file,rclone_config_file>>
+|Configuration of all Rclone backends.
+|`string`
+|n/a
+|yes
+
+|[[input_enable_grafana_dashboard]] <<input_enable_grafana_dashboard,enable_grafana_dashboard>>
+|Boolean to add a monitoring dashboard to Grafana.
+|`bool`
+|`false`
+|no
+
+|[[input_schedules]] <<input_schedules,schedules>>
+|list of cronjobs to execute
+|
+
+[source]
+----
+map(object({
+    disabled    = optional(bool, false)
+    labels      = optional(map(string), {})
+    annotations = optional(map(string), {})
+    schedule    = string
+    rcloneCmd   = list(string)
+  }))
+----
+
 |`{}`
 |no
 

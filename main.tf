@@ -4,7 +4,7 @@ resource "null_resource" "dependencies" {
 
 resource "argocd_project" "this" {
   metadata {
-    name      = "<CHART_NAME>"
+    name      = "rclone"
     namespace = var.argocd_namespace
     annotations = {
       "devops-stack.io/argocd_namespace" = var.argocd_namespace
@@ -12,8 +12,8 @@ resource "argocd_project" "this" {
   }
 
   spec {
-    description  = "<CHART_NAME> application project"
-    source_repos = ["https://github.com/camptocamp/devops-stack-module-<CHART_NAME>.git"]
+    description  = "Rclone application project"
+    source_repos = ["https://github.com/camptocamp/devops-stack-module-rclone.git"]
 
     destination {
       name      = "in-cluster"
@@ -35,9 +35,36 @@ data "utils_deep_merge_yaml" "values" {
   input = [for i in concat(local.helm_values, var.helm_values) : yamlencode(i)]
 }
 
+resource "random_string" "oauth2_cookie_secret" {
+  length  = 32
+  special = false
+}
+
+resource "kubernetes_namespace" "rclone_namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_secret" "rclone_config_secret" {
+
+  metadata {
+    name      = "rclone-config-file"
+    namespace = var.namespace
+  }
+
+  data = {
+    "rclone.conf" = var.rclone_config_file
+  }
+
+  depends_on = [
+    resource.kubernetes_namespace.rclone_namespace
+  ]
+}
+
 resource "argocd_application" "this" {
   metadata {
-    name      = "<CHART_NAME>"
+    name      = "rclone"
     namespace = var.argocd_namespace
   }
 
@@ -52,8 +79,8 @@ resource "argocd_application" "this" {
     project = argocd_project.this.metadata.0.name
 
     source {
-      repo_url        = "https://github.com/camptocamp/devops-stack-module-<CHART_NAME>.git"
-      path            = "charts/<CHART_NAME>"
+      repo_url        = "https://github.com/camptocamp/devops-stack-module-rclone.git"
+      path            = "charts/rclone"
       target_revision = var.target_revision
       helm {
         values = data.utils_deep_merge_yaml.values.output
@@ -85,13 +112,15 @@ resource "argocd_application" "this" {
       }
 
       sync_options = [
-        "CreateNamespace=true"
+        # Set to false because namespace is created by resource.kubernetes_namespace.rclone_namespace
+        "CreateNamespace=false"
       ]
     }
   }
 
   depends_on = [
     resource.null_resource.dependencies,
+    resource.kubernetes_secret.rclone_config_secret
   ]
 }
 

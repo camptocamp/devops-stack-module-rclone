@@ -12,5 +12,10 @@ terraform {
       source  = "hashicorp/null"
       version = ">= 3"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes" # Needed for the creation of a Kubernetes secret
+      version = ">= 2"
+    }
+
   }
 }

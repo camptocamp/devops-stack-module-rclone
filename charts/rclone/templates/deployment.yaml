@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rclone.fullname" . }}
+  labels:
+    {{- include "rclone.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "rclone.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "rclone.selectorLabels" . | nindent 8 }}
+        {{- toYaml .Values.podLabels | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rclone.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          env:
+            # TODO: Import from values.yaml / cm / secrets
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 5572
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          command:
+            - rclone
+            - rcd
+            - --rc-addr=:5572
+            - --rc-enable-metrics
+            {{- if .Values.ingress.enabled }}
+            - --rc-web-gui
+            - --rc-web-gui-no-open-browser
+            {{- end }}
+            - --rc-no-auth
+            - -vv
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /config/rclone
+              readOnly: true
+      {{- with .Values.oidc }}
+        - image: {{ $.Values.oidc.oauth2_proxy_image }}
+          imagePullPolicy: Always
+          name: oauth2-proxy
+          args:
+            - "--http-address=0.0.0.0:4180"
+            - "--upstream=http://localhost:5572"
+            - "--provider=oidc"
+            - {{ printf "--oidc-issuer-url=%s" $.Values.oidc.issuer_url | quote }}
+            - "--client-id=$(client_id)"
+            - "--client-secret=$(client_secret)"
+            - "--cookie-secret=$(cookie_secret)"
+            - "--cookie-secure=true"
+            - "--cookie-refresh=5m"
+            - "--email-domain=*"
+            - {{ printf "--redirect-url=%s" $.Values.oidc.redirect_url | quote }}
+            {{- range $.Values.oidc.oauth2_proxy_extra_args }}
+            - {{ . | quote }}
+            {{- end }}
+          env:
+            - name: client_id
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-oauth-config
+                  key: oauth_client_id
+            - name: client_secret
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-oauth-config
+                  key: oauth_client_secret
+            - name: cookie_secret
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Release.Name }}-oauth-config
+                  key: oauth_cookie_secret
+          ports:
+            - containerPort: 4180
+              name: proxy
+              protocol: TCP
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: rclone-config
+        secret:
+          secretName: rclone-config-file
